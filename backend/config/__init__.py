@@ -22,6 +22,9 @@ DATA_GOV_BASE_URL = "https://api.data.gov.in/resource"
 IMD_API_KEY = os.getenv("IMD_API_KEY", "")
 IMD_API_BASE_URL = "https://api.imd.gov.in/public/index.php"
 
+# Google Maps Platform Configuration
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", "")
+
 CPCB_CCR_URL = "https://app.cpcbccr.com/caaqms"
 CPCB_MAIN_URL = "https://cpcb.nic.in"
 MOEFCC_URL = "https://moef.gov.in"

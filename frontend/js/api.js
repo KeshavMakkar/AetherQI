@@ -97,6 +97,16 @@ export async function uploadCustomCSV(fileContent, sourceType = "cpcb", signal) 
 
 // ----------------- MULTI-CITY HEURISTIC SIMULATION ENDPOINTS ----------------- //
 
+export async function fetchMapsConfig(signal) {
+  try {
+    const res = await fetch(`${API_BASE}/api/config/maps`, { signal });
+    if (!res.ok) return { configured: false, api_key: null, env_var_name: "GOOGLE_MAPS_API_KEY" };
+    return await res.json();
+  } catch (err) {
+    return { configured: false, api_key: null, env_var_name: "GOOGLE_MAPS_API_KEY" };
+  }
+}
+
 export async function fetchFestivalConfig(signal) {
   const res = await fetch(`${API_BASE}/api/festival-config`, { signal });
   if (!res.ok) throw new Error("Failed to load central festival configuration");

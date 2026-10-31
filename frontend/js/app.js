@@ -20,8 +20,18 @@ import {
   fetchSimulationTimeline,
   fetchHeatmap,
   fetchPredictions,
-  fetchAlerts
+  fetchAlerts,
+  fetchMapsConfig
 } from "./api.js";
+
+import {
+  setupGoogleMapsHeatmap,
+  updateGoogleMapsTheme,
+  panGoogleMapsToCity,
+  focusGoogleMapsNeighbourhood,
+  refreshGoogleMapsOverlays,
+  onGoogleMapsError
+} from "./google_maps.js";
 
 import {
   renderPredictionTimelineChart,
@@ -74,6 +84,7 @@ class CentralStateStore {
     this.predictionCurves = [];
     this.alerts = [];
     this.weather = null;
+    this.mapsConfig = null;
     this.citiesList = [];
     this.abortController = null;
     this.subscribers = [];
@@ -132,12 +143,7 @@ class CentralStateStore {
 
 const store = new CentralStateStore();
 
-// Map and Playback Instances
-let mainMap = null;
-let mainTileLayer = null;
-let mainMapMarkers = [];
-let dedicatedMap = null;
-let dedicatedTileLayer = null;
+// Playback and Map State
 let playbackTimer = null;
 let isPlaying = false;
 
@@ -184,17 +190,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupTimelinePlayback();
   setupSimulationForm();
 
-  // Initialize Map immediately
-  initInteractiveMap();
+  // Load Google Maps API configuration from backend
+  try {
+    store.mapsConfig = await fetchMapsConfig();
+  } catch (err) {
+    console.warn("Unable to fetch maps configuration:", err);
+    store.mapsConfig = { configured: false, api_key: null, env_var_name: "GOOGLE_MAPS_API_KEY" };
+  }
 
-  // Load initial city data
-  await loadCityData(store.city);
-
-  // Resize listener for map recalculation
-  window.addEventListener("resize", () => {
-    if (mainMap) mainMap.invalidateSize();
-    if (dedicatedMap) dedicatedMap.invalidateSize();
+  // Subscribe to Google Maps authentication/network failures
+  onGoogleMapsError((type, details) => {
+    console.warn("Google Maps error event intercepted:", type, details);
+    initInteractiveMap();
+    initDedicatedHeatmap();
   });
+
+  // Load initial city data (also initializes Google Maps)
+  await loadCityData(store.city);
 
   refreshIcons();
 });
@@ -212,8 +224,8 @@ function setupThemeToggle() {
     store.setTheme(nextTheme);
     updateThemeIcon(nextTheme);
 
-    // Swap map tile layer seamlessly
-    updateMapTileTheme(nextTheme);
+    // Synchronize Google Maps dark/light mode palette
+    updateGoogleMapsTheme(nextTheme);
 
     // Re-render heatmap markers with updated theme popups
     renderHeatmapMarkers(store.dayOffset);
@@ -242,210 +254,53 @@ function updateThemeIcon(theme) {
   refreshIcons();
 }
 
-function createLeafletTileLayer(theme) {
-  const lightTileUrl = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-  const darkTileUrl = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
-  const osmFallbackUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-  const targetUrl = theme === "dark" ? darkTileUrl : lightTileUrl;
-
-  const layer = L.tileLayer(targetUrl, {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    maxZoom: 19,
-    subdomains: 'abcd'
-  });
-
-  // Zero-error tile error fallback: automatically loads standard OpenStreetMap if subdomains fail
-  layer.on("tileerror", function(err) {
-    console.warn("Tile layer network issue, fallback to OpenStreetMap standard tiles:", err);
-    layer.setUrl(osmFallbackUrl);
-  });
-
-  return layer;
-}
-
-function updateMapTileTheme(theme) {
-  if (mainTileLayer && mainMap) {
-    mainMap.removeLayer(mainTileLayer);
-    mainTileLayer = createLeafletTileLayer(theme).addTo(mainMap);
-  }
-
-  if (dedicatedTileLayer && dedicatedMap) {
-    dedicatedMap.removeLayer(dedicatedTileLayer);
-    dedicatedTileLayer = createLeafletTileLayer(theme).addTo(dedicatedMap);
-  }
-}
-
 // =============================================================================
-// TASK 1: INTERACTIVE LEAFLET MAP (GUARANTEED LOADING & ZERO ERROR)
+// GOOGLE MAPS JAVASCRIPT API CONTROLLER & FALLBACK HANDLERS
 // =============================================================================
 
-function initInteractiveMap() {
-  const mapContainer = document.getElementById("aetherqiHeatmap");
-  if (!mapContainer || mainMap) return;
-
-  if (typeof L === "undefined") {
-    console.error("Leaflet is still loading, retrying in 100ms...");
-    setTimeout(initInteractiveMap, 100);
-    return;
-  }
-
-  const cityCfg = CITY_COORDINATES[store.city] || CITY_COORDINATES["Delhi"] || CITY_COORDINATES["Ludhiana"];
-
-  // Initialize main map with explicit height and center
-  mainMap = L.map("aetherqiHeatmap", {
-    center: [cityCfg.lat, cityCfg.lng],
-    zoom: cityCfg.zoom,
-    zoomControl: true,
-    scrollWheelZoom: false
+async function initInteractiveMap() {
+  const cityCfg = CITY_COORDINATES[store.city] || CITY_COORDINATES["Delhi"];
+  await setupGoogleMapsHeatmap({
+    containerId: "aetherqiHeatmap",
+    city: store.city,
+    cityCoords: cityCfg,
+    simulationData: store.simulationData,
+    dayOffset: store.dayOffset,
+    aqiFilter: store.aqiFilter,
+    theme: store.theme,
+    backendConfig: store.mapsConfig
   });
-
-  mainTileLayer = createLeafletTileLayer(store.theme).addTo(mainMap);
-
-  // Trigger size invalidation after initial render
-  setTimeout(() => {
-    if (mainMap) mainMap.invalidateSize();
-  }, 250);
 }
 
-function initDedicatedHeatmap() {
-  const mapContainer = document.getElementById("dedicatedHeatmapView");
-  if (!mapContainer) return;
-
-  if (dedicatedMap) {
-    dedicatedMap.invalidateSize();
-    return;
-  }
-
-  if (typeof L === "undefined") return;
-
-  const cityCfg = CITY_COORDINATES[store.city] || CITY_COORDINATES["Delhi"] || CITY_COORDINATES["Ludhiana"];
-
-  dedicatedMap = L.map("dedicatedHeatmapView", {
-    center: [cityCfg.lat, cityCfg.lng],
-    zoom: cityCfg.zoom
+async function initDedicatedHeatmap() {
+  const cityCfg = CITY_COORDINATES[store.city] || CITY_COORDINATES["Delhi"];
+  await setupGoogleMapsHeatmap({
+    containerId: "dedicatedHeatmapView",
+    city: store.city,
+    cityCoords: cityCfg,
+    simulationData: store.simulationData,
+    dayOffset: store.dayOffset,
+    aqiFilter: store.aqiFilter,
+    theme: store.theme,
+    backendConfig: store.mapsConfig
   });
-
-  dedicatedTileLayer = createLeafletTileLayer(store.theme).addTo(dedicatedMap);
-
-  renderHeatmapMarkers(store.dayOffset);
 }
 
 function renderHeatmapMarkers(dayOffset) {
-  if (!mainMap || !store.simulationData) return;
-
-  // Clear previous markers
-  mainMapMarkers.forEach(m => mainMap.removeLayer(m));
-  mainMapMarkers = [];
-
-  const neighbourhoods = store.simulationData.neighbourhoods || [];
-
-  neighbourhoods.forEach(nh => {
-    const record = nh.records.find(r => r.day_offset === dayOffset) || nh.records[0];
-
-    // Filter by AQI severity if active
-    if (store.aqiFilter !== "all") {
-      const a = record.aqi;
-      if (store.aqiFilter === "good" && a > 100) return;
-      if (store.aqiFilter === "moderate" && (a <= 100 || a > 200)) return;
-      if (store.aqiFilter === "poor" && (a <= 200 || a > 400)) return;
-      if (store.aqiFilter === "severe" && a <= 400) return;
-    }
-
-    const color = getAQIColor(record.aqi);
-    const radius = Math.max(300, record.aqi * 2.8);
-
-    const circle = L.circle([nh.latitude, nh.longitude], {
-      color: color,
-      fillColor: color,
-      fillOpacity: 0.5,
-      radius: radius,
-      weight: 2
-    });
-
-    const isDark = store.theme === "dark";
-    const popupContent = `
-      <div style="padding: 0.85rem; min-width: 220px; font-family: Inter, -apple-system, sans-serif; color: ${isDark ? '#FFFFFF' : '#111827'};">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-          <strong style="font-size: 0.95rem;">${nh.name}</strong>
-          <span style="font-size: 0.7rem; background: var(--bg-accent-subtle); color: var(--primary-accent); padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 600;">
-            ${nh.type}
-          </span>
-        </div>
-        <div style="font-size: 0.75rem; color: ${isDark ? '#D1D5DB' : '#64748B'}; margin-bottom: 0.6rem;">
-          ${nh.city} &bull; ${record.date} (${record.phase})
-        </div>
-        <div style="background: ${isDark ? '#111111' : '#F8FAFC'}; border: 1px solid var(--border-color); border-radius: 6px; padding: 0.5rem; margin-bottom: 0.6rem;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-            <span style="font-size: 0.8rem;">IND-AQI:</span>
-            <strong style="color: ${color}; font-size: 0.95rem;">${record.aqi}</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem; font-size: 0.8rem;">
-            <span style="color: ${isDark ? '#D1D5DB' : '#64748B'};">Category:</span>
-            <span style="font-weight: 600;">${record.category}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-            <span style="color: ${isDark ? '#D1D5DB' : '#64748B'};">PM2.5 / PM10:</span>
-            <span style="font-weight: 600;">${record.pm25} / ${record.pm10} µg/m³</span>
-          </div>
-        </div>
-        <div style="font-size: 0.75rem; color: ${isDark ? '#D1D5DB' : '#64748B'}; display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
-          <span>Wind: ${record.wind_speed} km/h</span>
-          <span>Temp: ${record.temperature || 22.0} °C</span>
-        </div>
-        <div style="margin-top: 0.4rem; border-top: 1px solid var(--border-subtle); padding-top: 0.35rem; font-size: 0.68rem; color: var(--text-muted);">
-          Source: ${record.data_source || 'AetherQI Heuristic Model'}
-        </div>
-      </div>
-    `;
-
-    circle.bindPopup(popupContent);
-    circle.addTo(mainMap);
-    mainMapMarkers.push(circle);
-
-    if (dedicatedMap) {
-      const dedicatedCircle = L.circle([nh.latitude, nh.longitude], {
-        color: color,
-        fillColor: color,
-        fillOpacity: 0.5,
-        radius: radius,
-        weight: 2
-      }).bindPopup(popupContent);
-      dedicatedCircle.addTo(dedicatedMap);
-    }
-  });
+  refreshGoogleMapsOverlays(store.simulationData, dayOffset, store.aqiFilter, store.theme);
 }
 
 function panMapToCity(city) {
-  if (!mainMap) return;
-  const cfg = CITY_COORDINATES[city] || CITY_COORDINATES["Delhi"];
-  mainMap.setView([cfg.lat, cfg.lng], cfg.zoom, { animate: true, duration: 1.0 });
-  if (dedicatedMap) {
-    dedicatedMap.setView([cfg.lat, cfg.lng], cfg.zoom, { animate: true });
-  }
-  setTimeout(() => {
-    if (mainMap) mainMap.invalidateSize();
-    if (dedicatedMap) dedicatedMap.invalidateSize();
-  }, 150);
+  const cityCfg = typeof city === "string" ? (CITY_COORDINATES[city] || CITY_COORDINATES["Delhi"]) : city;
+  panGoogleMapsToCity(cityCfg);
 }
 
 function focusNeighbourhoodOnMap(name) {
-  if (!mainMap || !store.simulationData) return;
   if (!name || name === "all") {
     panMapToCity(store.city);
     return;
   }
-
-  const nh = store.simulationData.neighbourhoods.find(n => n.name.toLowerCase().includes(name.toLowerCase()));
-  if (nh) {
-    mainMap.setView([nh.latitude, nh.longitude], 14, { animate: true });
-    const targetMarker = mainMapMarkers.find(m => {
-      const latlng = m.getLatLng();
-      return Math.abs(latlng.lat - nh.latitude) < 0.001 && Math.abs(latlng.lng - nh.longitude) < 0.001;
-    });
-    if (targetMarker) {
-      targetMarker.openPopup();
-    }
-  }
+  focusGoogleMapsNeighbourhood(name, store.simulationData, store.theme);
 }
 
 // =============================================================================
@@ -533,9 +388,33 @@ async function loadCityData(city) {
     renderTimelineTab(store.timelineMilestones);
     renderEnvironmentTab(simRes, store.weather);
 
-    // Pan map to new city and plot markers
-    panMapToCity(matchedCity);
-    renderHeatmapMarkers(store.dayOffset);
+    // Pan map to new city and plot Google Maps markers/overlays
+    await setupGoogleMapsHeatmap({
+      containerId: "aetherqiHeatmap",
+      city: matchedCity,
+      cityCoords: cityCfg,
+      simulationData: simRes,
+      dayOffset: store.dayOffset,
+      aqiFilter: store.aqiFilter,
+      theme: store.theme,
+      backendConfig: store.mapsConfig
+    });
+    panGoogleMapsToCity(cityCfg);
+
+    // Synchronize dedicated heatmap view if currently visible
+    const dedicatedEl = document.getElementById("dedicatedHeatmapView");
+    if (dedicatedEl && dedicatedEl.offsetParent !== null) {
+      setupGoogleMapsHeatmap({
+        containerId: "dedicatedHeatmapView",
+        city: matchedCity,
+        cityCoords: cityCfg,
+        simulationData: simRes,
+        dayOffset: store.dayOffset,
+        aqiFilter: store.aqiFilter,
+        theme: store.theme,
+        backendConfig: store.mapsConfig
+      });
+    }
 
     // Update metrics for current day offset
     updateDashboardMetricsForOffset(store.dayOffset);
@@ -1051,12 +930,12 @@ function setupNavigationTabs() {
         pageTitle.textContent = titles[targetTab];
       }
 
-      // Map size recalculations on tab visibility
+      // Map view synchronization on tab visibility
       if (targetTab === "heatmap") {
         setTimeout(initDedicatedHeatmap, 100);
       }
-      if (targetTab === "dashboard" && mainMap) {
-        setTimeout(() => mainMap.invalidateSize(), 100);
+      if (targetTab === "dashboard") {
+        setTimeout(initInteractiveMap, 100);
       }
 
       refreshIcons();
@@ -1186,7 +1065,7 @@ function setupSettingsTab() {
     radioLight.addEventListener("change", () => {
       store.setTheme("light");
       updateThemeIcon("light");
-      updateMapTileTheme("light");
+      updateGoogleMapsTheme("light");
       renderHeatmapMarkers(store.dayOffset);
       renderFilteredPredictionChart();
       refreshIcons();
@@ -1194,7 +1073,7 @@ function setupSettingsTab() {
     radioDark.addEventListener("change", () => {
       store.setTheme("dark");
       updateThemeIcon("dark");
-      updateMapTileTheme("dark");
+      updateGoogleMapsTheme("dark");
       renderHeatmapMarkers(store.dayOffset);
       renderFilteredPredictionChart();
       refreshIcons();

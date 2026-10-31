@@ -24,7 +24,7 @@ from sqlalchemy import desc
 from backend.config import (
     BASE_DIR, DATA_DIR,
     FRESHNESS_LIVE_HOURS, FRESHNESS_DELAYED_HOURS,
-    DATA_GOV_API_KEY, IMD_API_KEY
+    DATA_GOV_API_KEY, IMD_API_KEY, GOOGLE_MAPS_API_KEY
 )
 from backend.database import get_db, Base, engine, SessionLocal
 from backend.models import (
@@ -254,6 +254,20 @@ def get_neighbourhoods(city: Optional[str] = None, db: Session = Depends(get_db)
     return results
 
 # ----------------- HEURISTIC SIMULATION & FESTIVAL ENDPOINTS ----------------- #
+
+@app.get("/api/config/maps")
+def get_maps_configuration():
+    """
+    Returns public Google Maps configuration.
+    Provides the configured API key if present in GOOGLE_MAPS_API_KEY environment variable.
+    """
+    key = os.getenv("GOOGLE_MAPS_API_KEY", "").strip()
+    return {
+        "provider": "google_maps",
+        "configured": bool(key),
+        "api_key": key if key else None,
+        "env_var_name": "GOOGLE_MAPS_API_KEY"
+    }
 
 @app.get("/api/festival-config")
 def get_festival_configuration():

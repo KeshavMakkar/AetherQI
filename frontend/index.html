@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AetherQI – Intelligent Air. Predictive Insights.</title>
   
-  <!-- Local Leaflet CSS (Zero external network failure) -->
-  <link rel="stylesheet" href="/static/css/leaflet.css">
+  <!-- Google Maps JavaScript API dynamic integration -->
   
   <!-- Main AetherQI Stylesheet (Light & Dark Theme) -->
   <link rel="stylesheet" href="/static/css/styles.css">
@@ -380,13 +379,13 @@
             <div id="predictionChartContainer"></div>
           </div>
 
-          <!-- TASK 1: INTERACTIVE LEAFLET POLLUTION HEATMAP -->
+          <!-- INTERACTIVE GOOGLE MAPS POLLUTION HEATMAP -->
           <div class="card" style="margin-bottom: 2rem;">
             <div class="card-header">
               <div>
                 <h3 class="card-title">
                   <i data-lucide="map" style="width: 20px; height: 20px; color: var(--primary-accent);"></i>
-                  Interactive Spatial Pollution Hotspots
+                  Interactive Spatial Pollution Hotspots (Google Maps)
                 </h3>
                 <p class="card-subtitle">
                   Live geospatial distribution. Scrub the timeline slider or click play to inspect day-by-day emissions across the 21-day window.
@@ -394,11 +393,11 @@
               </div>
 
               <div style="font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
-                <span class="badge-provenance">Interactive Geographical Map</span>
+                <span class="badge-provenance">Google Maps API &bull; Provenance Verified</span>
               </div>
             </div>
 
-            <!-- Leaflet Map Container (Explicit Height Fixed) -->
+            <!-- Google Maps Viewport Container -->
             <div id="aetherqiHeatmap" class="map-viewport"></div>
 
             <!-- Interactive Timeline Slider & Play/Pause (21 Calendar Days: T-10 to T+10) -->
@@ -448,32 +447,49 @@
               </div>
             </div>
 
-            <!-- Map AQI Legend -->
-            <div class="map-legend">
-              <span style="font-weight: 700; color: var(--text-main); margin-right: 0.5rem;">CPCB AQI Scale:</span>
-              <div class="legend-chip">
-                <span class="legend-color-dot" style="background: var(--aqi-good);"></span>
-                <span>Good (0-50)</span>
+            <!-- Map AQI Legend & Data Provenance -->
+            <div class="map-legend-bar" style="display: flex; flex-direction: column; gap: 0.65rem; margin-top: 1rem; padding: 0.85rem 1rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px;">
+              <div class="map-legend" style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.65rem; font-size: 0.78rem;">
+                <span style="font-weight: 700; color: var(--text-main); margin-right: 0.25rem;">CPCB IND-AQI Scale:</span>
+                <div class="legend-chip">
+                  <span class="legend-color-dot" style="background: var(--aqi-good);"></span>
+                  <span>Good (0-50)</span>
+                </div>
+                <div class="legend-chip">
+                  <span class="legend-color-dot" style="background: var(--aqi-satisfactory);"></span>
+                  <span>Satisfactory (51-100)</span>
+                </div>
+                <div class="legend-chip">
+                  <span class="legend-color-dot" style="background: var(--aqi-moderate);"></span>
+                  <span>Moderate (101-200)</span>
+                </div>
+                <div class="legend-chip">
+                  <span class="legend-color-dot" style="background: var(--aqi-poor);"></span>
+                  <span>Poor (201-300)</span>
+                </div>
+                <div class="legend-chip">
+                  <span class="legend-color-dot" style="background: var(--aqi-very-poor);"></span>
+                  <span>Very Poor (301-400)</span>
+                </div>
+                <div class="legend-chip">
+                  <span class="legend-color-dot" style="background: var(--aqi-severe);"></span>
+                  <span>Severe (401-500)</span>
+                </div>
               </div>
-              <div class="legend-chip">
-                <span class="legend-color-dot" style="background: var(--aqi-satisfactory);"></span>
-                <span>Satisfactory (51-100)</span>
-              </div>
-              <div class="legend-chip">
-                <span class="legend-color-dot" style="background: var(--aqi-moderate);"></span>
-                <span>Moderate (101-200)</span>
-              </div>
-              <div class="legend-chip">
-                <span class="legend-color-dot" style="background: var(--aqi-poor);"></span>
-                <span>Poor (201-300)</span>
-              </div>
-              <div class="legend-chip">
-                <span class="legend-color-dot" style="background: var(--aqi-very-poor);"></span>
-                <span>Very Poor (301-400)</span>
-              </div>
-              <div class="legend-chip">
-                <span class="legend-color-dot" style="background: var(--aqi-severe);"></span>
-                <span>Severe (401-500)</span>
+
+              <!-- Measurement Provenance Distinction -->
+              <div class="map-provenance-legend" style="display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem; font-size: 0.78rem; border-top: 1px solid var(--border-subtle); padding-top: 0.5rem;">
+                <span style="font-weight: 700; color: var(--text-main);">Data Provenance:</span>
+                <div style="display: flex; align-items: center; gap: 0.45rem;">
+                  <span style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 4px; background: rgba(16, 185, 129, 0.2); border: 1.5px solid #10B981; color: #10B981; font-size: 10px; font-weight: 800;">✓</span>
+                  <strong style="color: var(--text-main);">Directly Measured:</strong>
+                  <span style="color: var(--text-secondary);">CPCB CAAQMS continuous telemetry station</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.45rem;">
+                  <span style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(255, 179, 102, 0.2); border: 1.5px solid var(--primary-accent); color: var(--primary-accent); font-size: 10px; font-weight: 800;">◎</span>
+                  <strong style="color: var(--text-main);">Simulated Estimate:</strong>
+                  <span style="color: var(--text-secondary);">Atmospheric dispersion & ML air shed heuristic</span>
+                </div>
               </div>
             </div>
           </div>
@@ -535,11 +551,58 @@
           <div class="card">
             <div class="card-header">
               <div>
-                <h2 class="card-title">Dedicated Geospatial Pollution Visualizer</h2>
-                <p class="card-subtitle">Full-resolution spatial interpolation and atmospheric dispersion modelling.</p>
+                <h2 class="card-title">Dedicated Geospatial Pollution Visualizer (Google Maps)</h2>
+                <p class="card-subtitle">Full-resolution spatial interpolation and atmospheric dispersion modelling powered by Google Maps JavaScript API.</p>
               </div>
+              <span class="badge-provenance">Spatial Grid &bull; CAAQMS Verified</span>
             </div>
             <div id="dedicatedHeatmapView" style="width: 100%; height: 560px; border-radius: 12px; border: 1px solid var(--border-color);"></div>
+
+            <!-- Map AQI Legend & Data Provenance -->
+            <div class="map-legend-bar" style="display: flex; flex-direction: column; gap: 0.65rem; margin-top: 1rem; padding: 0.85rem 1rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px;">
+              <div class="map-legend" style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.65rem; font-size: 0.78rem;">
+                <span style="font-weight: 700; color: var(--text-main); margin-right: 0.25rem;">CPCB IND-AQI Scale:</span>
+                <div class="legend-chip">
+                  <span class="legend-color-dot" style="background: var(--aqi-good);"></span>
+                  <span>Good (0-50)</span>
+                </div>
+                <div class="legend-chip">
+                  <span class="legend-color-dot" style="background: var(--aqi-satisfactory);"></span>
+                  <span>Satisfactory (51-100)</span>
+                </div>
+                <div class="legend-chip">
+                  <span class="legend-color-dot" style="background: var(--aqi-moderate);"></span>
+                  <span>Moderate (101-200)</span>
+                </div>
+                <div class="legend-chip">
+                  <span class="legend-color-dot" style="background: var(--aqi-poor);"></span>
+                  <span>Poor (201-300)</span>
+                </div>
+                <div class="legend-chip">
+                  <span class="legend-color-dot" style="background: var(--aqi-very-poor);"></span>
+                  <span>Very Poor (301-400)</span>
+                </div>
+                <div class="legend-chip">
+                  <span class="legend-color-dot" style="background: var(--aqi-severe);"></span>
+                  <span>Severe (401-500)</span>
+                </div>
+              </div>
+
+              <!-- Measurement Provenance Distinction -->
+              <div class="map-provenance-legend" style="display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem; font-size: 0.78rem; border-top: 1px solid var(--border-subtle); padding-top: 0.5rem;">
+                <span style="font-weight: 700; color: var(--text-main);">Data Provenance:</span>
+                <div style="display: flex; align-items: center; gap: 0.45rem;">
+                  <span style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 4px; background: rgba(16, 185, 129, 0.2); border: 1.5px solid #10B981; color: #10B981; font-size: 10px; font-weight: 800;">✓</span>
+                  <strong style="color: var(--text-main);">Directly Measured:</strong>
+                  <span style="color: var(--text-secondary);">CPCB CAAQMS continuous telemetry station</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.45rem;">
+                  <span style="display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: rgba(255, 179, 102, 0.2); border: 1.5px solid var(--primary-accent); color: var(--primary-accent); font-size: 10px; font-weight: 800;">◎</span>
+                  <strong style="color: var(--text-main);">Simulated Estimate:</strong>
+                  <span style="color: var(--text-secondary);">Atmospheric dispersion & ML air shed heuristic</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -859,8 +922,7 @@
     </div>
   </div>
 
-  <!-- Local Leaflet Script (Ensures 100% Reliable Loading with zero CDN dependencies) -->
-  <script src="/static/js/leaflet.js"></script>
+  <!-- Google Maps JavaScript API is loaded dynamically via js/google_maps.js -->
   <!-- Main Application Script -->
   <script type="module" src="/static/js/app.js"></script>
 </body>

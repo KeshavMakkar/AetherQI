@@ -212,3 +212,11 @@ def test_cities_endpoint_and_multi_city():
     assert mumbai_hm["city"] == "Mumbai"
     assert len(mumbai_hm["markers"]) >= 5
     assert mumbai_hm["center"]["latitude"] > 18.0
+
+def test_maps_configuration_endpoint():
+    from backend.main import get_maps_configuration
+    cfg = get_maps_configuration()
+    assert cfg["provider"] == "google_maps"
+    assert "configured" in cfg
+    assert "api_key" in cfg
+    assert cfg["env_var_name"] == "GOOGLE_MAPS_API_KEY"
