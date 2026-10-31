@@ -1,0 +1,58 @@
+[
+  {
+    "station_id": "IMD_DL_SAF",
+    "name": "Safdarjung Observatory, Delhi",
+    "city": "Delhi",
+    "state": "Delhi",
+    "latitude": 28.5833,
+    "longitude": 77.2000,
+    "elevation_m": 216,
+    "source_url": "https://api.imd.gov.in/public/index.php",
+    "parameters": ["temperature", "humidity", "wind_speed", "wind_direction", "rainfall", "pressure"]
+  },
+  {
+    "station_id": "IMD_DL_PAL",
+    "name": "Palam Airport Observatory, Delhi",
+    "city": "Delhi",
+    "state": "Delhi",
+    "latitude": 28.5667,
+    "longitude": 77.1167,
+    "elevation_m": 230,
+    "source_url": "https://api.imd.gov.in/public/index.php",
+    "parameters": ["temperature", "humidity", "wind_speed", "wind_direction", "rainfall", "pressure"]
+  },
+  {
+    "station_id": "IMD_DL_AYA",
+    "name": "Ayanagar Observatory, Delhi",
+    "city": "Delhi",
+    "state": "Delhi",
+    "latitude": 28.4833,
+    "longitude": 77.1333,
+    "elevation_m": 240,
+    "source_url": "https://api.imd.gov.in/public/index.php",
+    "parameters": ["temperature", "humidity", "wind_speed", "wind_direction", "rainfall"]
+  },
+  {
+    "station_id": "IMD_MH_COL",
+    "name": "Colaba Observatory, Mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "latitude": 18.9067,
+    "longitude": 72.8147,
+    "elevation_m": 11,
+    "source_url": "https://api.imd.gov.in/public/index.php",
+    "parameters": ["temperature", "humidity", "wind_speed", "wind_direction", "rainfall"]
+  },
+  {
+    "station_id": "IMD_KA_BLR",
+    "name": "Bengaluru City Observatory",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "latitude": 12.9716,
+    "longitude": 77.5946,
+    "elevation_m": 920,
+    "source_url": "https://api.imd.gov.in/public/index.php",
+    "parameters": ["temperature", "humidity", "wind_speed", "wind_direction", "rainfall"]
+  }
+]
+

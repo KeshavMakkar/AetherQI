@@ -1,0 +1,65 @@
+# ==============================================================================
+# AetherQI – Intelligent Air. Predictive Insights.
+# Git Ignore Configuration
+# ==============================================================================
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Testing & code coverage
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+.cache/
+nosetests.xml
+coverage.xml
+
+# Local environment configuration & API keys
+.env
+*.env
+!.env.example
+
+# Local databases & transient state
+*.db
+*.sqlite
+*.sqlite3
+diwali_airwatch.db
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# IDE & text editor configurations
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# Logs & temporary runtimes
+*.log
+logs/
+*.pid
+tmp/
+temp/

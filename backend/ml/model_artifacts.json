@@ -1,0 +1,208 @@
+{
+  "model_architecture": "Random Forest Regressor (Ensemble of 100 Trees)",
+  "training_data": "CPCB CAAQMS Historical Station Data (2021-2024)",
+  "testing_data": "CPCB CAAQMS Historical Station Data (2025 Test Season)",
+  "training_records": 11560,
+  "test_records": 2890,
+  "metrics": {
+    "pm25": {
+      "mae_ugm3": 20.37,
+      "rmse_ugm3": 32.07,
+      "r2_score": 0.929
+    },
+    "pm10": {
+      "mae_ugm3": 29.48,
+      "rmse_ugm3": 42.85,
+      "r2_score": 0.933
+    }
+  },
+  "feature_importance_top": [
+    [
+      "pm25_rolling_6h",
+      0.691361289390273
+    ],
+    [
+      "diwali_phase_code",
+      0.10089068915534445
+    ],
+    [
+      "pm10_rolling_6h",
+      0.0679233726505972
+    ],
+    [
+      "pm25_lag1",
+      0.033070248226325205
+    ],
+    [
+      "hour",
+      0.03154008114599429
+    ],
+    [
+      "pm10_lag1",
+      0.028208408128398945
+    ],
+    [
+      "days_to_diwali",
+      0.016848602765130814
+    ],
+    [
+      "humidity_pct",
+      0.011698533892226859
+    ]
+  ],
+  "feature_columns": [
+    "pm25_lag1",
+    "pm10_lag1",
+    "pm25_rolling_6h",
+    "pm10_rolling_6h",
+    "temperature_c",
+    "humidity_pct",
+    "wind_speed_kmh",
+    "wind_direction_deg",
+    "rainfall_mm",
+    "hour",
+    "day_of_week",
+    "month",
+    "diwali_phase_code",
+    "days_to_diwali",
+    "firecracker_restriction_level"
+  ],
+  "sample_comparisons": [
+    {
+      "timestamp": "2025-10-13 00:00:00",
+      "station_name": "Anand Vihar, Delhi - DPCC",
+      "actual_pm25": 199.7,
+      "predicted_pm25": 233.4,
+      "actual_pm10": 352.7,
+      "predicted_pm10": 407.0,
+      "diwali_phase": "pre_diwali_baseline"
+    },
+    {
+      "timestamp": "2025-10-21 14:00:00",
+      "station_name": "Anand Vihar, Delhi - DPCC",
+      "actual_pm25": 597.7,
+      "predicted_pm25": 601.5,
+      "actual_pm10": 879.8,
+      "predicted_pm10": 925.5,
+      "diwali_phase": "post_diwali_hangover"
+    },
+    {
+      "timestamp": "2025-10-18 03:00:00",
+      "station_name": "R K Puram, Delhi - DPCC",
+      "actual_pm25": 171.2,
+      "predicted_pm25": 177.2,
+      "actual_pm10": 318.2,
+      "predicted_pm10": 292.1,
+      "diwali_phase": "pre_diwali_buildup"
+    },
+    {
+      "timestamp": "2025-10-14 17:00:00",
+      "station_name": "ITO, Delhi - CPCB",
+      "actual_pm25": 151.1,
+      "predicted_pm25": 164.8,
+      "actual_pm10": 291.1,
+      "predicted_pm10": 302.2,
+      "diwali_phase": "pre_diwali_baseline"
+    },
+    {
+      "timestamp": "2025-10-23 07:00:00",
+      "station_name": "ITO, Delhi - CPCB",
+      "actual_pm25": 196.4,
+      "predicted_pm25": 231.7,
+      "actual_pm10": 453.3,
+      "predicted_pm10": 423.6,
+      "diwali_phase": "post_diwali_dispersal"
+    },
+    {
+      "timestamp": "2025-10-19 20:00:00",
+      "station_name": "IGI Airport (T3), Delhi - IMD",
+      "actual_pm25": 168.9,
+      "predicted_pm25": 197.7,
+      "actual_pm10": 336.3,
+      "predicted_pm10": 340.8,
+      "diwali_phase": "pre_diwali_buildup"
+    },
+    {
+      "timestamp": "2025-10-16 10:00:00",
+      "station_name": "Punjabi Bagh, Delhi - DPCC",
+      "actual_pm25": 218.6,
+      "predicted_pm25": 225.4,
+      "actual_pm10": 417.1,
+      "predicted_pm10": 396.5,
+      "diwali_phase": "pre_diwali_baseline"
+    },
+    {
+      "timestamp": "2025-10-25 00:00:00",
+      "station_name": "Punjabi Bagh, Delhi - DPCC",
+      "actual_pm25": 305.6,
+      "predicted_pm25": 278.5,
+      "actual_pm10": 454.9,
+      "predicted_pm10": 450.6,
+      "diwali_phase": "post_diwali_dispersal"
+    },
+    {
+      "timestamp": "2025-10-21 13:00:00",
+      "station_name": "Mandir Marg, Delhi - DPCC",
+      "actual_pm25": 358.6,
+      "predicted_pm25": 377.8,
+      "actual_pm10": 523.0,
+      "predicted_pm10": 624.6,
+      "diwali_phase": "post_diwali_hangover"
+    },
+    {
+      "timestamp": "2025-10-18 03:00:00",
+      "station_name": "Rohini, Delhi - DPCC",
+      "actual_pm25": 192.7,
+      "predicted_pm25": 194.9,
+      "actual_pm10": 322.9,
+      "predicted_pm10": 329.8,
+      "diwali_phase": "pre_diwali_buildup"
+    },
+    {
+      "timestamp": "2025-10-14 16:00:00",
+      "station_name": "Jawaharlal Nehru Stadium, Delhi - DPCC",
+      "actual_pm25": 158.1,
+      "predicted_pm25": 166.8,
+      "actual_pm10": 310.3,
+      "predicted_pm10": 301.3,
+      "diwali_phase": "pre_diwali_baseline"
+    },
+    {
+      "timestamp": "2025-10-23 06:00:00",
+      "station_name": "Jawaharlal Nehru Stadium, Delhi - DPCC",
+      "actual_pm25": 239.2,
+      "predicted_pm25": 241.6,
+      "actual_pm10": 316.9,
+      "predicted_pm10": 391.6,
+      "diwali_phase": "post_diwali_dispersal"
+    },
+    {
+      "timestamp": "2025-10-19 20:00:00",
+      "station_name": "Vikas Sadan, Gurugram - HSPCB",
+      "actual_pm25": 220.0,
+      "predicted_pm25": 215.1,
+      "actual_pm10": 376.1,
+      "predicted_pm10": 368.6,
+      "diwali_phase": "pre_diwali_buildup"
+    },
+    {
+      "timestamp": "2025-10-16 09:00:00",
+      "station_name": "Sector-62, Noida - UPPCB",
+      "actual_pm25": 216.1,
+      "predicted_pm25": 217.9,
+      "actual_pm10": 355.0,
+      "predicted_pm10": 367.3,
+      "diwali_phase": "pre_diwali_baseline"
+    },
+    {
+      "timestamp": "2025-10-25 00:00:00",
+      "station_name": "Sector-62, Noida - UPPCB",
+      "actual_pm25": 262.9,
+      "predicted_pm25": 255.3,
+      "actual_pm10": 354.5,
+      "predicted_pm10": 379.5,
+      "diwali_phase": "post_diwali_dispersal"
+    }
+  ],
+  "last_trained_utc": "2026-10-31T17:57:41.109173"
+}

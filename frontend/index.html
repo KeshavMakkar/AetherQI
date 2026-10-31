@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AetherQI – Intelligent Air. Predictive Insights.</title>
+  
+  <!-- Local Leaflet CSS (Zero external network failure) -->
+  <link rel="stylesheet" href="/static/css/leaflet.css">
+  
+  <!-- Main AetherQI Stylesheet (Light & Dark Theme) -->
+  <link rel="stylesheet" href="/static/css/styles.css">
+  
+  <!-- FontAwesome Free fallback -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- ======================================================================
+         SIDEBAR NAVIGATION
+         ====================================================================== -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon-box">
+          <i data-lucide="wind" style="width: 24px; height: 24px;"></i>
+        </div>
+        <div>
+          <div class="brand-name">AetherQI</div>
+          <div class="brand-tagline">Intelligent Air. Predictive Insights.</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </button>
+
+        <button class="nav-item" data-tab="heatmap">
+          <i data-lucide="map-pin"></i>
+          <span>Pollution Heatmap</span>
+        </button>
+
+        <button class="nav-item" data-tab="predictions">
+          <i data-lucide="sparkles"></i>
+          <span>AI Predictions</span>
+        </button>
+
+        <button class="nav-item" data-tab="timeline">
+          <i data-lucide="calendar"></i>
+          <span>Diwali Timeline</span>
+        </button>
+
+        <button class="nav-item" data-tab="environment">
+          <i data-lucide="cloud-sun"></i>
+          <span>Environmental Factors</span>
+        </button>
+
+        <button class="nav-item" data-tab="alerts">
+          <i data-lucide="bell"></i>
+          <span>Alerts & Advisories</span>
+        </button>
+
+        <button class="nav-item" data-tab="governance">
+          <i data-lucide="database"></i>
+          <span>Data Sources & Audit</span>
+        </button>
+
+        <button class="nav-item" data-tab="settings">
+          <i data-lucide="settings"></i>
+          <span>Settings</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="gov-indicator-badge">
+          <i data-lucide="shield-check" style="width: 16px; height: 16px; color: #10B981;"></i>
+          <span>Official GoI CAAQMS Live</span>
+        </div>
+        <div style="margin-top: 0.5rem; text-align: center; font-size: 0.7rem; color: var(--text-muted);">
+          CPCB &bull; data.gov.in &bull; IMD
+        </div>
+      </div>
+    </aside>
+
+    <!-- ======================================================================
+         MAIN CONTENT AREA
+         ====================================================================== -->
+    <div class="main-wrapper">
+      
+      <!-- TOP NAVIGATION BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <span class="page-title" id="pageTitleText">Dashboard</span>
+          <span class="badge-provenance" style="font-size: 0.72rem; padding: 0.25rem 0.6rem;">
+            <i data-lucide="shield-check" style="width: 13px; height: 13px; color: #10B981;"></i>
+            Verified GoI Integration
+          </span>
+        </div>
+
+        <div class="topbar-right">
+          <!-- TASK 4: THEME TOGGLE (Sun/Moon) -->
+          <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">
+            <i data-lucide="sun" id="themeIcon" style="width: 18px; height: 18px;"></i>
+          </button>
+
+          <div class="status-pill">
+            <span class="status-pulse"></span>
+            <span id="activeStationPill">Anand Vihar, Delhi - DPCC Live CAAQMS</span>
+          </div>
+
+          <div class="last-updated">
+            <i data-lucide="clock" style="width: 14px; height: 14px; vertical-align: -2px;"></i>
+            <span id="lastUpdatedText">Updated: Live</span>
+          </div>
+
+          <button class="btn btn-secondary" id="openCsvModalBtn" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">
+            <i data-lucide="upload"></i> CSV Import
+          </button>
+        </div>
+      </header>
+
+      <!-- CONTENT PANES -->
+      <main class="content-wrapper">
+
+        <!-- ==================================================================
+             TAB 1: MAIN DASHBOARD
+             ================================================================== -->
+        <div id="tab-dashboard" class="tab-pane active">
+          
+          <!-- MAIN HEADER -->
+          <div class="main-header">
+            <div class="header-title-group">
+              <h1 id="headerCityTitle">Delhi Air Quality Intelligence</h1>
+              <p>Predicting neighbourhood-level air pollution before, during and after Diwali across 20 major Indian cities.</p>
+            </div>
+
+            <div class="header-actions">
+              <span class="badge-provenance">
+                <i data-lucide="shield-alert" style="width: 14px; height: 14px;"></i>
+                Simulated Predictions & Verified GoI Baseline
+              </span>
+              <button class="btn btn-primary" id="refreshDashboardBtn">
+                <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i> Refresh Data
+              </button>
+            </div>
+          </div>
+
+          <!-- TASK 3: DEDICATED TOP HORIZONTAL FILTER TOOLBAR (ROUNDED 12PX) -->
+          <div class="filter-toolbar" id="mainFilterToolbar">
+            <!-- 1. City Selector (All 20 Metropolitan Cities) -->
+            <div class="filter-group">
+              <label class="filter-label" for="globalCitySelector">
+                <i data-lucide="map-pin"></i> City
+              </label>
+              <select id="globalCitySelector" class="filter-select" title="Select Indian Metropolitan City">
+                <optgroup label="Primary Metropolitan Cities (8)">
+                  <option value="Delhi" selected>Delhi (NCT)</option>
+                  <option value="Mumbai">Mumbai (Maharashtra)</option>
+                  <option value="Bengaluru">Bengaluru (Karnataka)</option>
+                  <option value="Hyderabad">Hyderabad (Telangana)</option>
+                  <option value="Kolkata">Kolkata (West Bengal)</option>
+                  <option value="Chennai">Chennai (Tamil Nadu)</option>
+                  <option value="Pune">Pune (Maharashtra)</option>
+                  <option value="Ahmedabad">Ahmedabad (Gujarat)</option>
+                </optgroup>
+                <optgroup label="Additional Industrial & Capital Cities (12)">
+                  <option value="Jaipur">Jaipur (Rajasthan)</option>
+                  <option value="Lucknow">Lucknow (Uttar Pradesh)</option>
+                  <option value="Ludhiana">Ludhiana (Punjab)</option>
+                  <option value="Chandigarh">Chandigarh (UT)</option>
+                  <option value="Bhopal">Bhopal (Madhya Pradesh)</option>
+                  <option value="Indore">Indore (Madhya Pradesh)</option>
+                  <option value="Surat">Surat (Gujarat)</option>
+                  <option value="Nagpur">Nagpur (Maharashtra)</option>
+                  <option value="Patna">Patna (Bihar)</option>
+                  <option value="Kanpur">Kanpur (Uttar Pradesh)</option>
+                  <option value="Kochi">Kochi (Kerala)</option>
+                  <option value="Bhubaneswar">Bhubaneswar (Odisha)</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <!-- 2. Neighbourhood Selector -->
+            <div class="filter-group">
+              <label class="filter-label" for="globalNeighbourhoodSelector">
+                <i data-lucide="building-2"></i> Zone / Area
+              </label>
+              <select id="globalNeighbourhoodSelector" class="filter-select" title="Filter by Local Neighbourhood">
+                <option value="all" selected>All Zones</option>
+              </select>
+            </div>
+
+            <!-- 3. Timeline / Date Selector -->
+            <div class="filter-group">
+              <label class="filter-label" for="globalDateSelector">
+                <i data-lucide="calendar"></i> Festival Date
+              </label>
+              <select id="globalDateSelector" class="filter-select" title="Select Timeline Date">
+                <option value="-10">29 Oct (T-10 Baseline)</option>
+                <option value="-9">30 Oct (T-9 Baseline)</option>
+                <option value="-8">31 Oct (T-8 Baseline)</option>
+                <option value="-7">01 Nov (T-7 Early Prep)</option>
+                <option value="-6">02 Nov (T-6 Early Prep)</option>
+                <option value="-5">03 Nov (T-5 Pre-Diwali)</option>
+                <option value="-4">04 Nov (T-4 Pre-Diwali)</option>
+                <option value="-3">05 Nov (T-3 Dhanteras)</option>
+                <option value="-2">06 Nov (T-2 Market Surge)</option>
+                <option value="-1">07 Nov (T-1 Choti Diwali)</option>
+                <option value="0" selected>08 Nov (Diwali Night Peak)</option>
+                <option value="1">09 Nov (T+1 Post-Diwali Smog)</option>
+                <option value="2">10 Nov (T+2 Residual Smog)</option>
+                <option value="3">11 Nov (T+3 Bhai Dooj)</option>
+                <option value="4">12 Nov (T+4 Dispersion)</option>
+                <option value="5">13 Nov (T+5 Dispersion)</option>
+                <option value="6">14 Nov (T+6 Dispersion)</option>
+                <option value="7">15 Nov (T+7 Atmospheric Rest)</option>
+                <option value="8">16 Nov (T+8 Clearing)</option>
+                <option value="9">17 Nov (T+9 Clearing)</option>
+                <option value="10">18 Nov (T+10 Restabilization)</option>
+              </select>
+            </div>
+
+            <!-- 4. Date Range Picker -->
+            <div class="filter-group">
+              <label class="filter-label" for="globalDateRangeSelector">
+                <i data-lucide="calendar-range"></i> Time Window
+              </label>
+              <select id="globalDateRangeSelector" class="filter-select" title="Select Analysis Window">
+                <option value="all" selected>Full 21-Day Window (T-10 to T+10)</option>
+                <option value="pre">Pre-Diwali Build-up (T-10 to T-1)</option>
+                <option value="peak">Festival Peak & Smog (T0 to T+2)</option>
+                <option value="recovery">Atmospheric Recovery (T+3 to T+10)</option>
+              </select>
+            </div>
+
+            <!-- 5. AQI Severity Filter -->
+            <div class="filter-group">
+              <label class="filter-label" for="globalAqiFilter">
+                <i data-lucide="gauge"></i> AQI Severity
+              </label>
+              <select id="globalAqiFilter" class="filter-select" title="Filter by AQI Band">
+                <option value="all" selected>All AQI Levels</option>
+                <option value="good">Good & Satisfactory (0-100)</option>
+                <option value="moderate">Moderate (101-200)</option>
+                <option value="poor">Poor & Very Poor (201-400)</option>
+                <option value="severe">Severe (401+)</option>
+              </select>
+            </div>
+
+            <!-- 6. Data Source Filter -->
+            <div class="filter-group">
+              <label class="filter-label" for="globalDataSourceFilter">
+                <i data-lucide="database"></i> Data Source
+              </label>
+              <select id="globalDataSourceFilter" class="filter-select" title="Filter by Provenance Source">
+                <option value="all" selected>All Official Sources</option>
+                <option value="CPCB">CPCB CAAQMS Real-Time</option>
+                <option value="data.gov.in">data.gov.in Open Data</option>
+                <option value="IMD">IMD Weather Observatories</option>
+                <option value="SIMULATED">AetherQI AI Predictor</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- SUMMARY CARDS (4 METRICS) -->
+          <div class="summary-cards-grid" id="summaryCardsContainer">
+            <!-- 1. Current AQI -->
+            <div class="summary-card" id="cardCurrentAqi">
+              <div class="summary-card-top">
+                <span class="summary-label">Current AQI</span>
+                <div class="summary-icon-box">
+                  <i data-lucide="gauge" style="width: 20px; height: 20px;"></i>
+                </div>
+              </div>
+              <div class="summary-value-row">
+                <span class="summary-value" id="currentAqiValue">184</span>
+                <span class="summary-unit">IND-AQI</span>
+              </div>
+              <div class="summary-meta">
+                <span class="status-badge" id="currentAqiBadge" style="background: rgba(234, 179, 8, 0.15); color: #EAB308;">
+                  Moderate
+                </span>
+                <span class="trend-indicator" id="currentAqiTrend" style="color: #EF4444;">
+                  <i data-lucide="arrow-up-right" style="width: 14px; height: 14px;"></i> +12% vs yesterday
+                </span>
+              </div>
+            </div>
+
+            <!-- 2. Predicted Peak AQI -->
+            <div class="summary-card" id="cardPeakAqi">
+              <div class="summary-card-top">
+                <span class="summary-label">Predicted Peak AQI</span>
+                <div class="summary-icon-box" style="color: #EF4444;">
+                  <i data-lucide="flame" style="width: 20px; height: 20px;"></i>
+                </div>
+              </div>
+              <div class="summary-value-row">
+                <span class="summary-value" id="peakAqiValue" style="color: #EF4444;">468</span>
+                <span class="summary-unit">Diwali Peak</span>
+              </div>
+              <div class="summary-meta">
+                <span class="status-badge" id="peakAqiBadge" style="background: rgba(239, 68, 68, 0.15); color: #EF4444;">
+                  Severe / Hazardous
+                </span>
+                <span class="trend-indicator" id="peakAqiTrend" style="color: #EF4444;">
+                  <i data-lucide="alert-triangle" style="width: 14px; height: 14px;"></i> Diwali Surge
+                </span>
+              </div>
+            </div>
+
+            <!-- 3. Current PM2.5 -->
+            <div class="summary-card" id="cardPm25">
+              <div class="summary-card-top">
+                <span class="summary-label">Current PM2.5</span>
+                <div class="summary-icon-box" style="color: #F59E0B;">
+                  <i data-lucide="cloud" style="width: 20px; height: 20px;"></i>
+                </div>
+              </div>
+              <div class="summary-value-row">
+                <span class="summary-value" id="currentPm25Value">122.5</span>
+                <span class="summary-unit">µg/m³</span>
+              </div>
+              <div class="summary-meta">
+                <span class="status-badge" id="pm25StandardBadge" style="background: rgba(245, 158, 11, 0.15); color: #F59E0B;">
+                  2.0x NAAQS Standard
+                </span>
+                <span class="trend-indicator" style="color: #EF4444;">
+                  <i data-lucide="trending-up" style="width: 14px; height: 14px;"></i> Elevating
+                </span>
+              </div>
+            </div>
+
+            <!-- 4. Wind Speed & Temperature -->
+            <div class="summary-card" id="cardWeather">
+              <div class="summary-card-top">
+                <span class="summary-label">Weather & Dispersion</span>
+                <div class="summary-icon-box">
+                  <i data-lucide="wind" style="width: 20px; height: 20px;"></i>
+                </div>
+              </div>
+              <div class="summary-value-row">
+                <span class="summary-value" id="currentWindValue">1.8</span>
+                <span class="summary-unit">km/h &bull; <span id="currentTempValue">22.0</span>°C</span>
+              </div>
+              <div class="summary-meta">
+                <span class="status-badge" id="weatherStatusBadge" style="background: var(--bg-accent-subtle); color: var(--primary-accent);">
+                  Stagnant Inversion
+                </span>
+                <span class="trend-indicator" style="color: var(--text-secondary);">
+                  <i data-lucide="compass" style="width: 14px; height: 14px;"></i> NW Drift
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PREDICTION GRAPH SECTION -->
+          <div class="card" style="margin-bottom: 2rem;">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">
+                  <i data-lucide="line-chart" style="width: 20px; height: 20px; color: var(--primary-accent);"></i>
+                  21-Day Trajectory Curve (T-10 Days to T+10 Days)
+                </h3>
+                <p class="card-subtitle">
+                  Comparing verified historical baseline observations against heuristic simulated festival predictions across 29 Oct → 8 Nov (Diwali) → 18 Nov.
+                </p>
+              </div>
+
+              <select id="chartNeighbourhoodFilter" class="select-pill">
+                <option value="all">All Neighbourhoods (Combined)</option>
+              </select>
+            </div>
+
+            <!-- SVG Line Chart Container -->
+            <div id="predictionChartContainer"></div>
+          </div>
+
+          <!-- TASK 1: INTERACTIVE LEAFLET POLLUTION HEATMAP -->
+          <div class="card" style="margin-bottom: 2rem;">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">
+                  <i data-lucide="map" style="width: 20px; height: 20px; color: var(--primary-accent);"></i>
+                  Interactive Spatial Pollution Hotspots
+                </h3>
+                <p class="card-subtitle">
+                  Live geospatial distribution. Scrub the timeline slider or click play to inspect day-by-day emissions across the 21-day window.
+                </p>
+              </div>
+
+              <div style="font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
+                <span class="badge-provenance">Interactive Geographical Map</span>
+              </div>
+            </div>
+
+            <!-- Leaflet Map Container (Explicit Height Fixed) -->
+            <div id="aetherqiHeatmap" class="map-viewport"></div>
+
+            <!-- Interactive Timeline Slider & Play/Pause (21 Calendar Days: T-10 to T+10) -->
+            <div class="timeline-controller">
+              <div class="timeline-controller-top">
+                <div class="playback-controls">
+                  <button id="timelinePlayBtn" class="btn-play" title="Play 21-Day Time-Lapse">
+                    <i data-lucide="play" id="playBtnIcon" style="width: 18px; height: 18px;"></i>
+                  </button>
+                  <span class="timeline-phase-label" id="currentTimelinePhaseText">
+                    08 Nov 2026 – Diwali Night Peak (Lakshmi Puja)
+                  </span>
+                </div>
+
+                <!-- Visual Phase Badges: Before Diwali | Diwali | After Diwali -->
+                <div class="timeline-phase-badges" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem;">
+                  <span class="badge-phase before" style="background: rgba(96, 165, 250, 0.12); color: #2563EB; padding: 0.2rem 0.5rem; border-radius: 6px; font-weight: 600;">
+                    Before Diwali (29 Oct – 7 Nov)
+                  </span>
+                  <span class="badge-phase diwali" style="background: rgba(239, 68, 68, 0.15); color: #DC2626; padding: 0.2rem 0.5rem; border-radius: 6px; font-weight: 700;">
+                    Diwali (8 Nov)
+                  </span>
+                  <span class="badge-phase after" style="background: rgba(16, 185, 129, 0.15); color: #059669; padding: 0.2rem 0.5rem; border-radius: 6px; font-weight: 600;">
+                    After Diwali (9 Nov – 18 Nov)
+                  </span>
+                </div>
+              </div>
+
+              <!-- Slider spanning -10 to +10 -->
+              <div class="timeline-slider-track">
+                <input type="range" min="-10" max="10" step="1" value="0" id="heatmapTimelineSlider" class="timeline-slider" title="Scrub across 21 calendar days (T-10 to T+10)">
+              </div>
+
+              <!-- High-resolution 21-day timeline ticks -->
+              <div class="timeline-ticks" style="font-size: 0.75rem; color: var(--text-secondary); display: flex; justify-content: space-between; padding: 0.25rem 0.2rem 0;">
+                <span title="29 Oct 2026">T-10 (29 Oct)</span>
+                <span title="31 Oct 2026">T-8</span>
+                <span title="02 Nov 2026">T-6</span>
+                <span title="04 Nov 2026">T-4</span>
+                <span title="06 Nov 2026">T-2</span>
+                <span style="color: #EF4444; font-weight: 800; transform: scale(1.1);" title="08 Nov 2026 - Diwali Night">T0 (8 Nov Diwali)</span>
+                <span title="10 Nov 2026">T+2</span>
+                <span title="12 Nov 2026">T+4</span>
+                <span title="14 Nov 2026">T+6</span>
+                <span title="16 Nov 2026">T+8</span>
+                <span title="18 Nov 2026">T+10 (18 Nov)</span>
+              </div>
+            </div>
+
+            <!-- Map AQI Legend -->
+            <div class="map-legend">
+              <span style="font-weight: 700; color: var(--text-main); margin-right: 0.5rem;">CPCB AQI Scale:</span>
+              <div class="legend-chip">
+                <span class="legend-color-dot" style="background: var(--aqi-good);"></span>
+                <span>Good (0-50)</span>
+              </div>
+              <div class="legend-chip">
+                <span class="legend-color-dot" style="background: var(--aqi-satisfactory);"></span>
+                <span>Satisfactory (51-100)</span>
+              </div>
+              <div class="legend-chip">
+                <span class="legend-color-dot" style="background: var(--aqi-moderate);"></span>
+                <span>Moderate (101-200)</span>
+              </div>
+              <div class="legend-chip">
+                <span class="legend-color-dot" style="background: var(--aqi-poor);"></span>
+                <span>Poor (201-300)</span>
+              </div>
+              <div class="legend-chip">
+                <span class="legend-color-dot" style="background: var(--aqi-very-poor);"></span>
+                <span>Very Poor (301-400)</span>
+              </div>
+              <div class="legend-chip">
+                <span class="legend-color-dot" style="background: var(--aqi-severe);"></span>
+                <span>Severe (401-500)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- NEIGHBOURHOOD COMPARISON SECTION -->
+          <div style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+              <div>
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main);">
+                  Neighbourhood Pollution Comparison
+                </h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                  Baseline observations vs simulated festival spikes across distinct urban typologies.
+                </p>
+              </div>
+
+              <span class="badge-provenance" id="nhCountPill">
+                5 Zones Monitored
+              </span>
+            </div>
+
+            <div class="nh-comparison-grid" id="neighbourhoodCardsContainer">
+              <!-- Rendered Dynamically via JS -->
+            </div>
+          </div>
+
+          <!-- ACTIONABLE ALERTS PANEL -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">
+                  <i data-lucide="shield-alert" style="width: 20px; height: 20px; color: #EF4444;"></i>
+                  Actionable Environmental Health Advisories
+                </h3>
+                <p class="card-subtitle">
+                  Automated warnings triggered by particulate spikes and meteorological stagnation.
+                </p>
+              </div>
+
+              <div style="display: flex; gap: 0.5rem;" id="alertFilterChips">
+                <button class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.65rem;" data-severity="">All</button>
+                <button class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.65rem; color: #EF4444;" data-severity="CRITICAL">Critical</button>
+                <button class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.65rem; color: #F59E0B;" data-severity="WARNING">Warning</button>
+                <button class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.65rem; color: #3B82F6;" data-severity="ADVISORY">Advisory</button>
+              </div>
+            </div>
+
+            <div id="actionableAlertsList">
+              <!-- Rendered Dynamically via JS -->
+            </div>
+          </div>
+
+        </div> <!-- End Tab 1: Dashboard -->
+
+        <!-- ==================================================================
+             TAB 2: FULL POLLUTION HEATMAP (Dedicated View)
+             ================================================================== -->
+        <div id="tab-heatmap" class="tab-pane">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Dedicated Geospatial Pollution Visualizer</h2>
+                <p class="card-subtitle">Full-resolution spatial interpolation and atmospheric dispersion modelling.</p>
+              </div>
+            </div>
+            <div id="dedicatedHeatmapView" style="width: 100%; height: 560px; border-radius: 12px; border: 1px solid var(--border-color);"></div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 3: AI PREDICTIONS (Scenario Simulator)
+             ================================================================== -->
+        <div id="tab-predictions" class="tab-pane">
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Random Forest Scenario & Policy Simulator</h2>
+                <p class="card-subtitle">
+                  Trained on 11,560 verified CPCB/IMD historical records with 95% Confidence Bounds.
+                </p>
+              </div>
+              <span class="badge-provenance">Validated R² = 0.929</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 320px 1fr; gap: 1.5rem;">
+              <form id="aiSimulationForm" style="background: var(--bg-secondary); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                <div style="margin-bottom: 1rem;">
+                  <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem;">Target Location / Station</label>
+                  <select id="aiSimLocation" class="form-select" style="width: 100%;"></select>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                  <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem;">Forecast Horizon</label>
+                  <select id="aiSimHours" class="form-select" style="width: 100%;">
+                    <option value="12">Next 12 Hours (Eve Peak)</option>
+                    <option value="24" selected>Next 24 Hours (Full Diurnal Cycle)</option>
+                    <option value="48">Next 48 Hours (Post-Diwali Dispersal)</option>
+                  </select>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                  <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem;">Policy / Emission Scenario</label>
+                  <select id="aiSimScenario" class="form-select" style="width: 100%;">
+                    <option value="green_crackers" selected>1. Regulated Green Firecrackers (CSIR-NEERI)</option>
+                    <option value="strict_ban">2. Strict Firecracker Ban (~75% reduction)</option>
+                    <option value="unrestricted">3. Unrestricted Traditional Festivities</option>
+                    <option value="severe_stagnation">4. Deep Inversion & Stagnant Winds (&lt;1 km/h)</option>
+                  </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 0.5rem;">
+                  <i data-lucide="sparkles"></i> Compute AI Forecast
+                </button>
+              </form>
+
+              <div id="aiForecastResults">
+                <div style="padding: 3rem; text-align: center; color: var(--text-secondary); border: 1px dashed var(--border-color); border-radius: 12px;">
+                  <i data-lucide="line-chart" style="width: 48px; height: 48px; margin-bottom: 1rem; color: var(--primary-accent);"></i>
+                  <h4 style="color: var(--text-main); margin-bottom: 0.5rem;">Click 'Compute AI Forecast' to Run Inference</h4>
+                  <p style="font-size: 0.85rem;">The Random Forest ensemble will forecast hourly particulate concentrations.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 4: DIWALI TIMELINE
+             ================================================================== -->
+        <div id="tab-timeline" class="tab-pane">
+          <div class="card">
+            <h2 class="card-title" style="margin-bottom: 0.5rem;">21-Day Phased Festival Timeline (T-10 to T+10)</h2>
+            <p class="card-subtitle" style="margin-bottom: 1.5rem;">Chronological 21-day progression from pre-Diwali ambient conditions (29 Oct) to celebration peak (8 Nov) and post-festival atmospheric restabilization (18 Nov).</p>
+            <div id="timelineDetailedContainer"></div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 5: ENVIRONMENTAL FACTORS
+             ================================================================== -->
+        <div id="tab-environment" class="tab-pane">
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <h2 class="card-title" style="margin-bottom: 0.5rem;">Meteorological & Transport Indicators</h2>
+            <p class="card-subtitle" style="margin-bottom: 1.5rem;">Live feeds integrated from India Meteorological Department (IMD) and MoRTH transport statistics.</p>
+            <div id="envFactorsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;"></div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 6: ALERTS & ADVISORIES
+             ================================================================== -->
+        <div id="tab-alerts" class="tab-pane">
+          <div class="card">
+            <h2 class="card-title" style="margin-bottom: 0.5rem;">Municipal Advisories & Health Precaution Protocol</h2>
+            <p class="card-subtitle" style="margin-bottom: 1.5rem;">Automated public health advisories mapped to CPCB IND-AQI severity levels.</p>
+            <div id="fullAlertsRegistry"></div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 7: DATA SOURCES & AUDIT
+             ================================================================== -->
+        <div id="tab-governance" class="tab-pane">
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Official Government Data Sources Registry</h2>
+                <p class="card-subtitle">Transparent provenance tracking. Verified against official Government of India portals.</p>
+              </div>
+              <span class="badge-provenance">100% Verified Feeds</span>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="data-sources-table">
+                <thead>
+                  <tr>
+                    <th>Authority</th>
+                    <th>Dataset Feed</th>
+                    <th>Integration Method</th>
+                    <th>Status</th>
+                    <th>Records</th>
+                    <th>Verification Link</th>
+                  </tr>
+                </thead>
+                <tbody id="governanceTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 class="card-title" style="margin-bottom: 0.5rem;">Automated Ingestion Audit Log</h2>
+            <p class="card-subtitle" style="margin-bottom: 1.5rem;">Chronological audit trail of connector executions and record synchronization.</p>
+            <div style="overflow-x: auto;">
+              <table class="data-sources-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Source Connector</th>
+                    <th>Status</th>
+                    <th>Ingested Records</th>
+                    <th>Duration</th>
+                  </tr>
+                </thead>
+                <tbody id="ingestionAuditTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             TAB 8: SETTINGS & PREFERENCES
+             ================================================================== -->
+        <div id="tab-settings" class="tab-pane">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem; max-width: 900px;">
+            <!-- Preferences Form Card -->
+            <div class="card">
+              <h2 class="card-title" style="margin-bottom: 0.35rem;">
+                <i data-lucide="sliders" style="width: 20px; height: 20px; color: var(--primary-accent);"></i>
+                Dashboard & Display Configuration
+              </h2>
+              <p class="card-subtitle" style="margin-bottom: 1.5rem;">Manage default startup location, visual theme mode, and data synchronization parameters.</p>
+              
+              <form id="settingsForm">
+                <!-- Theme Selection -->
+                <div style="margin-bottom: 1.25rem;">
+                  <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;">Visual Theme</label>
+                  <div style="display: flex; gap: 1rem;">
+                    <label style="flex: 1; display: flex; align-items: center; gap: 0.6rem; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; background: var(--bg-card);" id="themeOptionLight">
+                      <input type="radio" name="settingsTheme" value="light" id="themeRadioLight">
+                      <div>
+                        <div style="font-weight: 600; font-size: 0.85rem;">Light Mode</div>
+                        <div style="font-size: 0.72rem; color: var(--text-secondary);">White & Light Blue</div>
+                      </div>
+                    </label>
+                    <label style="flex: 1; display: flex; align-items: center; gap: 0.6rem; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; background: var(--bg-card);" id="themeOptionDark">
+                      <input type="radio" name="settingsTheme" value="dark" id="themeRadioDark">
+                      <div>
+                        <div style="font-weight: 600; font-size: 0.85rem;">Dark Mode</div>
+                        <div style="font-size: 0.72rem; color: var(--text-secondary);">Black & Light Orange</div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Default Startup City -->
+                <div style="margin-bottom: 1.25rem;">
+                  <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem;" for="settingsDefaultCity">Default Startup City (20 Supported)</label>
+                  <select id="settingsDefaultCity" class="form-select" style="width: 100%;">
+                    <optgroup label="Primary Metropolitan Cities (8)">
+                      <option value="Delhi" selected>Delhi (NCT)</option>
+                      <option value="Mumbai">Mumbai (Maharashtra)</option>
+                      <option value="Bengaluru">Bengaluru (Karnataka)</option>
+                      <option value="Hyderabad">Hyderabad (Telangana)</option>
+                      <option value="Kolkata">Kolkata (West Bengal)</option>
+                      <option value="Chennai">Chennai (Tamil Nadu)</option>
+                      <option value="Pune">Pune (Maharashtra)</option>
+                      <option value="Ahmedabad">Ahmedabad (Gujarat)</option>
+                    </optgroup>
+                    <optgroup label="Additional Industrial & Capital Cities (12)">
+                      <option value="Jaipur">Jaipur (Rajasthan)</option>
+                      <option value="Lucknow">Lucknow (Uttar Pradesh)</option>
+                      <option value="Ludhiana">Ludhiana (Punjab)</option>
+                      <option value="Chandigarh">Chandigarh (UT)</option>
+                      <option value="Bhopal">Bhopal (Madhya Pradesh)</option>
+                      <option value="Indore">Indore (Madhya Pradesh)</option>
+                      <option value="Surat">Surat (Gujarat)</option>
+                      <option value="Nagpur">Nagpur (Maharashtra)</option>
+                      <option value="Patna">Patna (Bihar)</option>
+                      <option value="Kanpur">Kanpur (Uttar Pradesh)</option>
+                      <option value="Kochi">Kochi (Kerala)</option>
+                      <option value="Bhubaneswar">Bhubaneswar (Odisha)</option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                <!-- Auto-refresh interval -->
+                <div style="margin-bottom: 1.25rem;">
+                  <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem;" for="settingsRefreshInterval">CAAQMS Observation Refresh Cadence</label>
+                  <select id="settingsRefreshInterval" class="form-select" style="width: 100%;">
+                    <option value="15">Every 15 minutes (Standard continuous telemetry)</option>
+                    <option value="60" selected>Every 1 hour (Official hourly CPCB aggregate)</option>
+                    <option value="manual">Manual trigger only (Offline/Low data mode)</option>
+                  </select>
+                </div>
+
+                <!-- Alert Threshold Slider -->
+                <div style="margin-bottom: 1.5rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                    <label style="font-size: 0.85rem; font-weight: 600;" for="settingsAlertThreshold">High Pollution Advisory Trigger Threshold</label>
+                    <span id="settingsThresholdValue" style="font-size: 0.85rem; font-weight: 800; color: #EF4444;">400 IND-AQI</span>
+                  </div>
+                  <input type="range" id="settingsAlertThreshold" min="200" max="500" step="10" value="400" style="width: 100%; accent-color: var(--primary-accent);">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                    <span>200 (Poor)</span>
+                    <span>300 (Very Poor)</span>
+                    <span>400 (Severe)</span>
+                    <span>500 (Hazardous)</span>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 0.75rem;">
+                  <button type="submit" class="btn btn-primary" style="flex: 1; justify-content: center;">
+                    <i data-lucide="check"></i> Save Preferences
+                  </button>
+                  <button type="button" class="btn btn-secondary" id="resetDefaultsBtn">
+                    Reset
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- System Info & Cache Card -->
+            <div class="card">
+              <h2 class="card-title" style="margin-bottom: 0.35rem;">
+                <i data-lucide="database" style="width: 20px; height: 20px; color: #10B981;"></i>
+                Data Provenance & Local Cache
+              </h2>
+              <p class="card-subtitle" style="margin-bottom: 1.25rem;">Client cache status and compliance auditing.</p>
+
+              <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem; font-size: 0.8rem; line-height: 1.6;">
+                <div><strong>Festival Year:</strong> 2026 (Diwali on 8 Nov 2026)</div>
+                <div><strong>Simulation Horizon:</strong> 21 Days (29 Oct to 18 Nov, T-10 to T+10)</div>
+                <div><strong>Monitored Cities:</strong> 20 Major Metropolitan Centers</div>
+                <div><strong>Standard:</strong> CPCB IND-AQI (MoEFCC Gazette 2014)</div>
+                <div><strong>Local Storage:</strong> <span id="settingsStorageSize">Active</span></div>
+              </div>
+
+              <div style="margin-bottom: 1.25rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer;">
+                  <input type="checkbox" id="settingsSoundToggle" checked style="accent-color: var(--primary-accent);">
+                  <span>Enable Audio Pulse on Severe Spikes (> 400 AQI)</span>
+                </label>
+              </div>
+
+              <button type="button" class="btn btn-outline" id="clearCacheBtn" style="width: 100%; justify-content: center; color: #EF4444; border-color: #EF4444;">
+                <i data-lucide="trash-2"></i> Clear Cached City Datasets & Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- CSV UPLOAD MODAL -->
+  <div class="modal-overlay" id="csvModalOverlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-lucide="file-up" style="width: 18px; height: 18px; vertical-align: -2px;"></i>
+          Upload Official Government CSV Dataset
+        </div>
+        <button class="modal-close-btn" id="closeCsvModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          Import official historical or real-time CSV files downloaded from <strong>data.gov.in</strong> or <strong>CPCB CCR portal</strong>.
+        </p>
+
+        <form id="csvUploadForm">
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem;">Source Authority</label>
+            <select id="csvSourceType" class="form-select" style="width: 100%;">
+              <option value="cpcb" selected>CPCB CCR Portal (app.cpcbccr.com)</option>
+              <option value="data_gov">Open Government Data Platform (data.gov.in)</option>
+              <option value="imd">India Meteorological Department (IMD)</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem;">Select CSV File</label>
+            <input type="file" id="csvFileInput" accept=".csv" class="form-input" style="width: 100%;" required>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="button" class="btn btn-outline" id="cancelCsvBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+              <i data-lucide="upload-cloud"></i> Ingest CSV
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Local Leaflet Script (Ensures 100% Reliable Loading with zero CDN dependencies) -->
+  <script src="/static/js/leaflet.js"></script>
+  <!-- Main Application Script -->
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>
