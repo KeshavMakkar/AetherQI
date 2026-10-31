@@ -17,7 +17,7 @@ from pydantic import BaseModel
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
@@ -708,3 +708,13 @@ def serve_index():
     if index_file.exists():
         return FileResponse(str(index_file))
     return JSONResponse({"message": "Diwali AirWatch API is running. Frontend index not found."})
+
+@app.get("/favicon.ico", include_in_schema=False)
+def serve_favicon():
+    fav_ico = FRONTEND_DIR / "favicon.ico"
+    if fav_ico.exists():
+        return FileResponse(str(fav_ico), media_type="image/x-icon")
+    fav_svg = FRONTEND_DIR / "favicon.svg"
+    if fav_svg.exists():
+        return FileResponse(str(fav_svg), media_type="image/svg+xml")
+    return Response(status_code=204)
