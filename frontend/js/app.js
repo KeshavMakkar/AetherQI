@@ -941,6 +941,32 @@ function setupNavigationTabs() {
       refreshIcons();
     });
   });
+
+  // Brand Home click navigates back to Dashboard
+  const brandHome = document.getElementById("brandHomeLink") || document.querySelector(".sidebar-brand");
+  if (brandHome) {
+    brandHome.addEventListener("click", () => {
+      const dashboardTabBtn = document.querySelector('.nav-item[data-tab="dashboard"]');
+      if (dashboardTabBtn) {
+        dashboardTabBtn.click();
+      } else {
+        navItems.forEach(n => n.classList.remove("active"));
+        tabPanes.forEach(pane => pane.classList.remove("active"));
+        const dashPane = document.getElementById("tab-dashboard");
+        if (dashPane) dashPane.classList.add("active");
+        if (pageTitle) pageTitle.textContent = titles.dashboard;
+        setTimeout(initInteractiveMap, 100);
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    brandHome.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        brandHome.click();
+      }
+    });
+  }
 }
 
 function setupTopBarControls() {
